@@ -1,6 +1,4 @@
-from cgitb import text
 import datetime, os, sqlite3, json, asyncio
-from tkinter import N
 
 import discord
 
