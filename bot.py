@@ -1,6 +1,4 @@
-from cgitb import text
 import datetime, os, sqlite3, json, asyncio
-from tkinter import N
 
 import discord
 
@@ -149,7 +147,7 @@ async def meals(ctx):
                     selection = json.loads(interaction.data["values"][0])
 
 
-            @discord.ui.button(label="확인")
+            @discord.ui.button(label="확인", ButtonStyle=discord.ButtonStyle.green, emoji=":white_check_mark:")
             async def accept(self, button: discord.ui.Button, interaction: discord.Interaction):
                 if author==interaction.user.id:
                     global selection
@@ -193,24 +191,15 @@ async def getHangang(ctx):
 #/dev
 @bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
 @discord.has_role(946797378780950608)
-async def dev1(ctx):
-    class dropdown(discord.ui.View):
-        @discord.ui.select(placeholder="asdf", options=[discord.SelectOption(label="test", value="value"), discord.SelectOption(label="test2", value="value2", description="des")])
-        async def textfield(self, select: discord.ui.Select, interaction: discord.Interaction):
-            print(interaction.data)
-
-        @discord.ui.button(label="asdf", style=discord.ButtonStyle.primary)
-        async def primary(self, button: discord.ui.Button, interaction: discord.Integration):
-            await ctx.respond("buttonpress")
-
-    await ctx.respond("dropdown", view=dropdown())
+async def dev1(ctx, text: discord.Option(str, "asdf")):
+    await ctx.respond(text)
 
 @bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
 @discord.has_role(946797378780950608)
-async def dev2(ctx):
+async def dev2(ctx, text: discord.Option(str, "다음 중 고르세요.", choices=["하나", "둘", "셋"])):
     
 
-    await ctx.respond("dropdown")
+    await ctx.respond(text)
 
 #/owner
 @bot.slash_command(name="owner", guild_ids = [803249696638238750], description="owner")
