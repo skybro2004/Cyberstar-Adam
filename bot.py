@@ -54,6 +54,7 @@ async def on_ready():
 async def ping(ctx):
     await ctx.respond(f'pong! {round(round(bot.latency, 4)*1000)}ms')
 
+
 #/status
 @bot.slash_command(guild_ids = [803249696638238750], description="현재 봇 상태 출력")
 async def status(ctx):
@@ -63,6 +64,7 @@ async def status(ctx):
     status_embed.add_field(name="last update", value=lastUpdateTime)
     status_embed.set_footer(text=f"hosting by ")
     await ctx.respond(embed=status_embed)
+
 
 #/help
 @bot.slash_command(name="help" , guild_ids = [803249696638238750], description="도움말을 불러옵니다.")
@@ -75,34 +77,58 @@ async def help(ctx):
     help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Assistant-Bot)", inline=False)
     await ctx.respond(embed=help_embed)
 
+
 #/급식
 @bot.slash_command(name="급식", guild_ids = [803249696638238750], description="급식을 불러옵니다")
-async def meals(ctx):
+async def meals(
+        ctx,
+        date: discord.Option(str, name="날짜", description="급식을 불러올 날짜를 선택합니다. YYMMDD 형식으로 입력받습니다.", default=datetime.date.today().strftime("%Y%m%d")),
+        mode: discord.Option(str, description="등록: 저장된 사용자 정보를 등록/수정합니다.", choices=["등록"], required=False)
+    ):
+    if date=="오늘":
+        date = datetime.date.today().strftime("%Y%m%d")
+    elif date=="내일":
+        date = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y%m%d")
+    elif len(date)==4:
+        date = str(datetime.date.today().year) + date
+    elif len(date)==6:
+        date = "20" + date
+    elif len(date)==8:
+        pass
+    else:
+        await ctx.respond("날짜 입력 형식이 잘못되었어요!")
+        return
+
     author = ctx.author.id
 
     cursor.execute("SELECT id FROM userData")
     userIdList = []
     for item in cursor.fetchall():
         userIdList.append(item[0])
-    
-    if author in userIdList:
+
+    #급식 불러오기
+    if (author in userIdList) and mode!="등록":
         cursor.execute(f"SELECT * FROM userData WHERE id={author}")
         userData = cursor.fetchone()
-        todayMeal = meal.getMeal(userData[1], userData[2])
+        todayMeal = meal.getMeal(userData[1], userData[2], date)
+
         if todayMeal["code"]==200:
-            mealEmbed = discord.Embed(title=f"{datetime.datetime.now().strftime('%m월 %d일')} 급식", color=0xe74c3c)
+            mealStr = []
             for item in todayMeal["data"]:
-                mealEmbed.add_field(name=item["name"], value=", ".join(item["allergy"]), inline=False)
+                mealStr.append(item["name"])
+            mealStr = "\n".join(mealStr)
+            mealEmbed = discord.Embed(title=f"{int(date[4:6])}월 {int(date[6:8])}일 급식", description=mealStr, color=0xe74c3c)
             mealEmbed.set_footer(text=f"{todayMeal['cal']}")
 
             await ctx.respond(embed=mealEmbed)
+
         elif todayMeal["code"]==416:
             await ctx.respond("오늘은 급식이 없습니다.")
+
         else:
             await ctx.respond(f"알 수 없는 에러가 발생했습니다.\nError no.{todayMeal['code']}")
 
-        await ctx.respond(embed=mealEmbed)
-
+    #사용자 정보 등록
     else:
         botMsg = await ctx.respond("학교 이름을 입력해주세요")
 
@@ -147,7 +173,7 @@ async def meals(ctx):
                     selection = json.loads(interaction.data["values"][0])
 
 
-            @discord.ui.button(label="확인", ButtonStyle=discord.ButtonStyle.green, emoji=":white_check_mark:")
+            @discord.ui.button(label="확인", ButtonStyle=discord.ButtonStyle.green)
             async def accept(self, button: discord.ui.Button, interaction: discord.Interaction):
                 if author==interaction.user.id:
                     global selection
@@ -175,12 +201,11 @@ async def meals(ctx):
         await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=selectSchl())
 
 
-
-
 #/시간표
 @bot.slash_command(name="시간표", guild_ids = [803249696638238750], description="시간표 불러옵니다")
 async def schedular(ctx):
     pass
+
 
 #/한강
 @bot.slash_command(name="한강", guild_ids = [803249696638238750], description="자살 하면 그만이야~")
@@ -188,18 +213,22 @@ async def getHangang(ctx):
     respondMsg = await ctx.respond(f"한강 수온을 불러오는중...")
     await respondMsg.edit_original_message(content = f"현재 한강 수온 : {hangang.getTemp()}°C")
 
+
 #/dev
 @bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
 @discord.has_role(946797378780950608)
-async def dev1(ctx, text: discord.Option(str, "asdf")):
+async def dev1(
+        ctx,
+        text: discord.Option(str, "asdf", default="기본 문자열")
+    ):
     await ctx.respond(text)
 
 @bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
 @discord.has_role(946797378780950608)
-async def dev2(ctx, text: discord.Option(str, "다음 중 고르세요.", choices=["하나", "둘", "셋"])):
-    
+async def dev2(ctx, text: discord.Option(bool, "T/F")):
+    #class testButton()
+    pass
 
-    await ctx.respond(text)
 
 #/owner
 @bot.slash_command(name="owner", guild_ids = [803249696638238750], description="owner")
@@ -208,9 +237,14 @@ async def hidden(ctx):
     print(bot.guilds)
     await ctx.respond(f"owner")
 
-@bot.slash_command(name="test", guild_ids = [803249696638238750], description="test")
+
+#/buttonTest
+@bot.slash_command(name="button_test", guild_ids = [803249696638238750], description="test")
 async def hidden(ctx):
-    await ctx.respond(f"owner")
+    button = discord.ui.Button(label="<:white_check_mark:> asfd", style=discord.ButtonStyle.green, emoji="✔")
+    components = discord.ui.View()
+    components.add_item(button)
+    await ctx.respond("awsdf", view=components)
 
 
 bot.run(keys["discordToken"])
