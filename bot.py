@@ -19,6 +19,9 @@ from modules import meal
 con = sqlite3.connect(f"{path}/data/database.db")
 cursor = con.cursor()
 
+#투표 데이터
+voteDatas = {}
+
 #디스코드 봇 토큰 불러오기
 keys = {}
 try:
@@ -204,7 +207,7 @@ async def meals(
                     selection = json.loads(interaction.data["values"][0])
 
             #확인 버튼 컴포넌트
-            @discord.ui.button(label="확인", ButtonStyle=discord.ButtonStyle.green)
+            @discord.ui.button(label="확인", style=discord.ButtonStyle.green)
             async def accept(self, button: discord.ui.Button, interaction: discord.Interaction):
                 #선택 완료
                 #인터랙션한 사용자==등록중인 사용자인가
@@ -246,6 +249,77 @@ async def schedular(ctx):
     pass
 
 
+#/투표
+class Vote:
+    def __init__(self):
+        self.voteData = {}
+    def addVote(self, userId, data):
+        if userId in self.voteData.keys():
+            raise Exception("alreadyVotedError")
+        self.voteData[userId] = data
+    def getVote(self):
+        return self.voteData
+
+class VoteButton:
+    def __init__(self):
+        pass
+    @discord.ui.button()
+    def asdf(self, button: discord.ui.Button):
+        discord.ui.Button()
+
+
+@bot.slash_command(name="투표", guild_ids = [803249696638238750], description="준비중")
+async def vide(
+        ctx,
+        mode: discord.Option(bool, name="찬반투표", description="asdf", default=True),
+        subject: discord.Option(str, name="주제", description="투표의 주제를 입력하세요.", required=False),
+        cases: discord.Option(str, name="안건", description="안건을 입력받습니다. \",\"로 구분합니다.", default=None)
+    ):
+
+    view = discord.ui.View()
+
+    voteEmbed = discord.Embed(title="!투표", description=f"주제: {subject}")
+
+    if mode==True:
+        buttonAgree = discord.ui.Button(emoji="✔", style=discord.ButtonStyle.green)
+        buttonDisagree = discord.ui.Button(emoji="✖", style=discord.ButtonStyle.red)
+        voteEmbed.add_field(name="찬성", value="0", inline=True)
+        voteEmbed.add_field(name="반대", value="0", inline=True)
+        async def agreeCallback(interaction):
+            print(interaction.message.content)
+            print(interaction.custom_id)
+            print(interaction.id)
+            voteDatas[interaction.message.id].addVote(interaction.user.id, True)
+        async def disagreeCallback(interaction):
+            voteDatas[interaction.message.id].addVote(interaction.user.id, False)
+        buttonAgree.callback = agreeCallback
+        buttonDisagree.callback = disagreeCallback
+        view.add_item(buttonAgree)
+        view.add_item(buttonDisagree)
+
+    else:
+        if (not "," in cases) or (cases.startswith(",")) or (cases.endswith(",")):
+            ctx.respond("안건을 최소 1개 이상 입력해주세요!")
+            return
+        cases = cases.split(",")
+
+    voteMsg = await ctx.respond(embed=voteEmbed, view=view)
+
+    print(voteMsg.id)
+
+    buttonAgree.custom_id = voteMsg.id
+
+    voteDatas[voteMsg.id] = Vote()
+    print(voteDatas)
+
+
+
+
+    #voteDatas[id].addVote(userId, data)
+
+    pass
+
+
 #/한강
 @bot.slash_command(name="한강", guild_ids = [803249696638238750], description="자살 하면 그만이야~")
 async def getHangang(ctx):
@@ -258,17 +332,26 @@ async def getHangang(ctx):
 #/dev
 @bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
 @discord.has_role(946797378780950608)
-async def dev1(
-        ctx,
-        text: discord.Option(str, "asdf", default="기본 문자열")
-    ):
-    await ctx.respond(text)
+async def dev1(ctx):
+    aasdff = discord.ui.Button(label="asdf")
+
 
 @bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
 @discord.has_role(946797378780950608)
-async def dev2(ctx, text: discord.Option(bool, "T/F")):
-    #class testButton()
-    pass
+async def dev2(ctx):
+    voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+    view = discord.ui.View()
+    view.add_item(voteList)
+    await ctx.respond("투표", view=view)
+
+@bot.slash_command(name="dev3", guild_ids = [803249696638238750], description="dev3")
+@discord.has_role(946797378780950608)
+async def dev3(ctx):
+    #voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+    inputText = discord.ui.InputText(label="label", placeholder="placeholder", value="asdf")
+    view = discord.ui.View()
+    view.add_item(inputText)
+    await ctx.respond("투표", view=view)
 
 
 #/owner
