@@ -267,27 +267,11 @@ async def doHcs(
         global userData
         userData = {"id": author}
 
-        #학교 외 데이터 수집
-        modal = discord.ui.Modal("자가진단 데이터 입력")
-
-        comp = discord.ui.InputText(label="이름", placeholder="당신의 이름을 입력해주세요.")
-        modal.add_item(comp)
-        comp = discord.ui.InputText(label="생년월일", placeholder="당신의 생일을 YYMMDD 형식으로 입력해주세요.", min_length=6, max_length=6, value="040309")
-        modal.add_item(comp)
-        comp = discord.ui.InputText(label="비밀번호", placeholder="쉿, 우리들만의 비밀이에요.", min_length=4, max_length=4)
-        modal.add_item(comp)
-
-        async def asdf(interaction):
-            await interaction.send_modal(modal)
-        modal.callback = asdf
-        await ctx.send_modal(modal)
-
-
 
 
 
         #학교 관련데이터 수집
-        botMsg = await ctx.send("학교 이름을 입력해주세요")
+        botMsg = await ctx.respond("학교 이름을 입력해주세요")
 
         #wait_for 대응 함수(메시지 작성자가 등록중인 사용자인가?)
         def check(m):
@@ -300,7 +284,7 @@ async def doHcs(
                 userMsg = await bot.wait_for("message", timeout=30.0, check=check)
             #타임아웃
             except asyncio.TimeoutError:
-                await botMsg.edit(content="타임아웃")
+                await botMsg.edit_original_message(content="타임아웃")
                 return
             #메시지 입력 후
             else:
@@ -315,12 +299,12 @@ async def doHcs(
 
                 #학교 검색 결과 없으면 다시 입력
                 elif schlData["code"]==416:
-                    await botMsg.edit(content="학교가 검색되지 않았어요.\n다시 입력해주세요")
+                    await botMsg.edit_original_message(content="학교가 검색되지 않았어요.\n다시 입력해주세요")
                     continue
 
                 #에러
                 else:
-                    await botMsg.edit(content=f"알 수 없는 에러가 발생했어요.\nError no.{schlData['code']}")
+                    await botMsg.edit_original_message(content=f"알 수 없는 에러가 발생했어요.\nError no.{schlData['code']}")
                     return
 
         #컴포넌트 생성
@@ -336,8 +320,8 @@ async def doHcs(
         view = discord.ui.View()
         view.add_item(select)
         view.add_item(buttonDone)
-        await botMsg.edit(content=f"\"{schlName}\" 검색결과", view=view)
-        #await botMsg.edit(content=f"\"{schlName}\" 검색결과", view=view)
+        await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=view)
+        #await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=view)
 
         #callback
         #선택한 거 저장하는 변수
@@ -384,9 +368,24 @@ async def doHcs(
                 del selection
 
                 #설정 완료 얼럿(5초후 자동 삭제)
-                await botMsg.edit(content="학교 설정 완료!", view=None, delete_after=5.0)
+                await botMsg.edit_original_message(content="학교 설정 완료!", view=None, delete_after=5.0)
 
-                await interaction.send_modal(modal)
+                #학교 외 데이터 수집
+                modal = discord.ui.Modal("자가진단 데이터 입력")
+
+                comp = discord.ui.InputText(label="이름", placeholder="당신의 이름을 입력해주세요.")
+                modal.add_item(comp)
+                comp = discord.ui.InputText(label="생년월일", placeholder="당신의 생일을 YYMMDD 형식으로 입력해주세요.", min_length=6, max_length=6, value="040309")
+                modal.add_item(comp)
+                comp = discord.ui.InputText(label="비밀번호", placeholder="쉿, 우리들만의 비밀이에요.", min_length=4, max_length=4)
+                modal.add_item(comp)
+
+                async def asdf(interaction):
+                    print(interaction.response)
+                    await interaction.response.send_modal(modal)
+                modal.callback = asdf
+
+                await interaction.response.send_modal(modal)
 
         #callback 지정
         select.callback = choiceSchool
