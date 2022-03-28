@@ -1,4 +1,4 @@
-import json, os, datetime
+import json, datetime
 import urllib.request as ul
 import urllib.parse as parse
 
