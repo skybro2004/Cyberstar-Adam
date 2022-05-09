@@ -1,4 +1,10 @@
-import discord
+import discord, os, json
+
+path = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
+
+keys = {}
+with open("/home/sj/Cyberstar-Adam/key.json", "r") as jsonKeys:
+    keys = json.load(jsonKeys)
 
 def sendDm(userIdArr, messages):
     #봇에게 권한 부여
@@ -17,7 +23,7 @@ def sendDm(userIdArr, messages):
         await bot.close()
 
 
-    bot.run("OTQ2NzY2MDQ3NTYwNzYxMzY1.Yhjelw.Ns4PpuhwffpcpEHZ43zyNZimxy4")
+    bot.run(keys["discordToken"])
 
 
 if __name__=="__main__":
