@@ -14,6 +14,7 @@ path = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 #모듈 불러오기
 from modules import hangang
 from modules import meal
+from modules import hcs
 
 #데이터베이스 불러오기
 con = sqlite3.connect(f"{path}/data/database.db")
@@ -236,6 +237,9 @@ async def meals(
                         #DB 적용
                         con.commit()
 
+                        #global selection 삭제(다른 기능과 꼬일 위험 제거)
+                        del selection
+
                         #설정 완료 얼럿(5초후 자동 삭제)
                         await botMsg.edit_original_message(content="설정 완료!", view=None, delete_after=5.0)
 
@@ -249,75 +253,170 @@ async def schedular(ctx):
     pass
 
 
-#/투표
-class Vote:
-    def __init__(self):
-        self.voteData = {}
-    def addVote(self, userId, data):
-        if userId in self.voteData.keys():
-            raise Exception("alreadyVotedError")
-        self.voteData[userId] = data
-    def getVote(self):
-        return self.voteData
-
-class VoteButton:
-    def __init__(self):
-        pass
-    @discord.ui.button()
-    def asdf(self, button: discord.ui.Button):
-        discord.ui.Button()
-
-
-@bot.slash_command(name="투표", guild_ids = [803249696638238750], description="준비중")
-async def vide(
+#/자가진단_등록
+@bot.slash_command(name="자가진단_등록", guild_ids = [803249696638238750], description="자가진단 데이터를 등록/수정합니다.")
+async def doHcs(
         ctx,
-        mode: discord.Option(bool, name="찬반투표", description="asdf", default=True),
-        subject: discord.Option(str, name="주제", description="투표의 주제를 입력하세요.", required=False),
-        cases: discord.Option(str, name="안건", description="안건을 입력받습니다. \",\"로 구분합니다.", default=None)
+        mode: discord.Option(str, description="등록: 저장된 사용자 정보를 등록/수정합니다.", choices=["사용자 정보", "신속항원검사 시행 요일", "자동시행 여부"], required=False, default="default")
     ):
 
-    view = discord.ui.View()
+    #사용자 아이디 임시 저장
+    author = ctx.author.id
 
-    voteEmbed = discord.Embed(title="!투표", description=f"주제: {subject}")
+    #사용자 정보(학교, 이름 등) 저장
+    if mode=="사용자 정보" or mode=="default":
 
-    if mode==True:
-        buttonAgree = discord.ui.Button(emoji="✔", style=discord.ButtonStyle.green)
-        buttonDisagree = discord.ui.Button(emoji="✖", style=discord.ButtonStyle.red)
-        voteEmbed.add_field(name="찬성", value="0", inline=True)
-        voteEmbed.add_field(name="반대", value="0", inline=True)
-        async def agreeCallback(interaction):
-            print(interaction.message.content)
-            print(interaction.custom_id)
-            print(interaction.id)
-            voteDatas[interaction.message.id].addVote(interaction.user.id, True)
-        async def disagreeCallback(interaction):
-            voteDatas[interaction.message.id].addVote(interaction.user.id, False)
-        buttonAgree.callback = agreeCallback
-        buttonDisagree.callback = disagreeCallback
-        view.add_item(buttonAgree)
-        view.add_item(buttonDisagree)
-
-    else:
-        if (not "," in cases) or (cases.startswith(",")) or (cases.endswith(",")):
-            ctx.respond("안건을 최소 1개 이상 입력해주세요!")
-            return
-        cases = cases.split(",")
-
-    voteMsg = await ctx.respond(embed=voteEmbed, view=view)
-
-    print(voteMsg.id)
-
-    buttonAgree.custom_id = voteMsg.id
-
-    voteDatas[voteMsg.id] = Vote()
-    print(voteDatas)
+        #입력값 임시저장
+        global userData
+        userData = {"id": author}
 
 
 
 
-    #voteDatas[id].addVote(userId, data)
+        #학교 관련데이터 수집
+        botMsg = await ctx.respond("학교 이름을 입력해주세요")
 
-    pass
+        #wait_for 대응 함수(메시지 작성자가 등록중인 사용자인가?)
+        def check(m):
+            return m.author.id == ctx.author.id and m.channel.id == botMsg.channel.id
+
+        #학교 이름 입력받기
+        while 1:
+            #메시지 입력 대기
+            try:
+                userMsg = await bot.wait_for("message", timeout=30.0, check=check)
+            #타임아웃
+            except asyncio.TimeoutError:
+                await botMsg.edit_original_message(content="타임아웃")
+                return
+            #메시지 입력 후
+            else:
+                schlName = userMsg.content
+                await userMsg.delete()
+
+                schlData = hcs.getSchl(schlName)
+
+                #학교 검색 성공
+                if schlData["code"]==200:
+                    break
+
+                #학교 검색 결과 없으면 다시 입력
+                elif schlData["code"]==416:
+                    await botMsg.edit_original_message(content="학교가 검색되지 않았어요.\n다시 입력해주세요")
+                    continue
+
+                #에러
+                else:
+                    await botMsg.edit_original_message(content=f"알 수 없는 에러가 발생했어요.\nError no.{schlData['code']}")
+                    return
+
+        #컴포넌트 생성
+        select = discord.ui.Select(placeholder="학교를 선택하세요")
+        buttonDone = discord.ui.Button(label="확인", style=discord.ButtonStyle.green)
+
+        #학교 목록 불러오기
+        schlData = schlData["schools"]
+        for i, school in enumerate(schlData):
+            select.append_option(discord.SelectOption(label=school["schlName"], description=school["office"], value=i))
+
+        #검색결과 보내기
+        view = discord.ui.View()
+        view.add_item(select)
+        view.add_item(buttonDone)
+        await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=view)
+        #await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=view)
+
+        #callback
+        #선택한 거 저장하는 변수
+        global selection
+        selection = -1
+
+        #select
+        async def choiceSchool(interaction):
+            if interaction.user.id==author: #상호작용한 사람이 등록하려는 사람인가?
+                global selection
+                selection = interaction.data["values"][0]
+
+        #buttonDone
+        async def choiceDone(interaction):
+            global selection
+            #아무것도 선택하지 않았을때
+            if selection==-1:
+                await ctx.respond("학교를 선택해주세요!", ephemeral=True)
+            else:
+                #userData에 학교 저장
+                global userData
+                userData["region"] = schlData[int(selection)]["office"]
+                userData["school"] = schlData[int(selection)]["schlName"]
+                userData["level"] = schlData[int(selection)]["schlLvl"]
+                """#DB에 등록
+                try:
+                    #선택한 학교 DB에 저장
+                    cursor.execute(
+                        "INSERT INTO hcsData(id, region, school, level) VALUES(?, ?, ?, ?)",
+                        (author, schlData[int(selection)]["office"], schlData[int(selection)]["schlName"], schlData[int(selection)]["schlLvl"])
+                    )
+
+                except sqlite3.IntegrityError: #이미 등록한 사용자의 경우
+                    #정보 업데이트
+                    cursor.execute(
+                        "UPDATE hcsData SET region=?, school=?, level=? WHERE id=?",
+                        (schlData[int(selection)]["office"], schlData[int(selection)]["schlName"], schlData[int(selection)]["schlLvl"], author)
+                    )
+
+                #DB 적용
+                con.commit()"""
+
+                #global selection 삭제(다른 기능과 꼬일 위험 제거)
+                del selection
+
+                #설정 완료 얼럿(5초후 자동 삭제)
+                await botMsg.edit_original_message(content="학교 설정 완료!", view=None, delete_after=5.0)
+
+                #학교 외 데이터 수집
+                modal = discord.ui.Modal("자가진단 데이터 입력")
+
+                comp = discord.ui.InputText(label="이름", placeholder="당신의 이름을 입력해주세요.")
+                modal.add_item(comp)
+                comp = discord.ui.InputText(label="생년월일", placeholder="당신의 생일을 YYMMDD 형식으로 입력해주세요.", min_length=6, max_length=6, value="040309")
+                modal.add_item(comp)
+                comp = discord.ui.InputText(label="비밀번호", placeholder="쉿, 우리들만의 비밀이에요.", min_length=4, max_length=4)
+                modal.add_item(comp)
+
+                async def asdf(interaction):
+                    print(interaction.response)
+                    await interaction.response.send_modal(modal)
+                modal.callback = asdf
+
+                await interaction.response.send_modal(modal)
+
+        #callback 지정
+        select.callback = choiceSchool
+        buttonDone.callback = choiceDone
+
+
+
+    if mode=="자동시행 여부" or mode=="default":
+        pass
+
+    if mode=="신속항원검사 시행 요일" or mode=="default":
+        pass
+
+
+    # modal = discord.ui.Modal("자가진단 정보 입력")
+    # compName = discord.ui.InputText(label="이름", style=discord.InputTextStyle.short)
+    # modal.add_item(compName)
+    # compBirth = discord.ui.InputText(label="생년월일", style=discord.InputTextStyle.long, min_length=6, max_length=6)
+    # modal.add_item(compBirth)
+    # comp = discord.ui.InputText(label="ㅁㄴㅇㄹ", style=discord.InputTextStyle.short)
+    # modal.add_item(comp)
+    # comp = discord.ui.InputText(label="ㅁㄴㅇㄹ", style=discord.InputTextStyle.short)
+    # modal.add_item(comp)
+
+    #async def 
+    
+    # await ctx.send_modal(modal)
+
 
 
 #/한강
