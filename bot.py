@@ -20,6 +20,9 @@ from modules import hcs
 con = sqlite3.connect(f"{path}/data/database.db")
 cursor = con.cursor()
 
+#투표 데이터
+voteDatas = {}
+
 #디스코드 봇 토큰 불러오기
 keys = {}
 try:
@@ -415,6 +418,7 @@ async def doHcs(
     # await ctx.send_modal(modal)
 
 
+
 #/한강
 @bot.slash_command(name="한강", guild_ids = [803249696638238750], description="자살 하면 그만이야~")
 async def getHangang(ctx):
@@ -427,17 +431,26 @@ async def getHangang(ctx):
 #/dev
 @bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
 @discord.has_role(946797378780950608)
-async def dev1(
-        ctx,
-        text: discord.Option(str, "asdf", default="기본 문자열")
-    ):
-    await ctx.respond(text)
+async def dev1(ctx):
+    aasdff = discord.ui.Button(label="asdf")
+
 
 @bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
 @discord.has_role(946797378780950608)
-async def dev2(ctx, text: discord.Option(bool, "T/F")):
-    #class testButton()
-    pass
+async def dev2(ctx):
+    voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+    view = discord.ui.View()
+    view.add_item(voteList)
+    await ctx.respond("투표", view=view)
+
+@bot.slash_command(name="dev3", guild_ids = [803249696638238750], description="dev3")
+@discord.has_role(946797378780950608)
+async def dev3(ctx):
+    #voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+    inputText = discord.ui.InputText(label="label", placeholder="placeholder", value="asdf")
+    view = discord.ui.View()
+    view.add_item(inputText)
+    await ctx.respond("투표", view=view)
 
 
 #/owner
