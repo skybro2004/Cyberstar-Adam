@@ -15,6 +15,7 @@ path = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 from modules import hangang
 from modules import meal
 from modules import hcs
+from modules import image
 
 #데이터베이스 불러오기
 con = sqlite3.connect(f"{path}/data/database.db")
@@ -66,30 +67,32 @@ async def ping(ctx):
 
 
 #/status
-@bot.slash_command(guild_ids = [803249696638238750], description="현재 봇 상태 출력")
+@bot.slash_command(description="현재 봇 상태 출력")
 async def status(ctx):
     status_embed = discord.Embed(title="status", description=f"log in as {bot.user}", color=0xe74c3c)
     status_embed.add_field(name="ping", value=f'{round(round(bot.latency, 4)*1000)}ms')
     status_embed.add_field(name="Uptime", value=f"{str(datetime.datetime.now() - startTime).split('.')[0]}", inline=False)
     status_embed.add_field(name="last update", value=lastUpdateTime)
-    status_embed.set_footer(text=f"hosting by ")
+    status_embed.set_footer(text=f"hosting by Raspberry Pi 4(8Gb)")
     await ctx.respond(embed=status_embed)
 
 
 #/help
-@bot.slash_command(name="help" , guild_ids = [803249696638238750], description="도움말을 불러옵니다.")
-@bot.slash_command(name="도움말" , guild_ids = [803249696638238750], description="도움말을 불러옵니다.")
+@bot.slash_command(name="help" , description="도움말을 불러옵니다.")
+@bot.slash_command(name="도움말" , description="도움말을 불러옵니다.")
 async def help(ctx):
     help_embed = discord.Embed(title='도움말', color=0xe74c3c)
-    help_embed.add_field(name="/status", value="현재 조교봇의 상태를 불러옵니다.", inline=False)
+    help_embed.add_field(name="/status", value="현재 아담의 상태를 불러옵니다.", inline=False)
     help_embed.add_field(name="/한강", value="한강 수온을 불러옵니다.", inline=False)
-    help_embed.add_field(name="/급식", value="준비중", inline=False)
+    help_embed.add_field(name="/급식", value="오늘 급식을 불러옵니다.", inline=False)
+    help_embed.add_field(name="/자가진단_등록", value="자동으로 자가진단을 해줍니다.", inline=False)
+    help_embed.add_field(name="/짤", value="짤을 불러옵니다.", inline=False)
     help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Assistant-Bot)", inline=False)
     await ctx.respond(embed=help_embed)
 
 
 #/급식
-@bot.slash_command(name="급식", guild_ids = [803249696638238750], description="급식을 불러옵니다")
+@bot.slash_command(name="급식", description="급식을 불러옵니다")
 async def meals(
         ctx,
         date: discord.Option(str, name="날짜", description="급식을 불러올 날짜를 선택합니다. YYMMDD 형식으로 입력받습니다.", default=datetime.date.today().strftime("%Y%m%d")),
@@ -254,7 +257,7 @@ async def schedular(ctx):
 
 
 #/자가진단_등록
-@bot.slash_command(name="자가진단_등록", guild_ids = [803249696638238750], description="자가진단 데이터를 등록/수정합니다.")
+@bot.slash_command(name="자가진단_등록", description="자가진단 데이터를 등록/수정합니다.")
 async def doHcs(
         ctx,
         mode: discord.Option(str, description="등록: 저장된 사용자 정보를 등록/수정합니다.", choices=["사용자 정보", "신속항원검사 시행 요일", "자동시행 여부"], required=False, default="default")
@@ -378,14 +381,35 @@ async def doHcs(
 
                 comp = discord.ui.InputText(label="이름", placeholder="당신의 이름을 입력해주세요.")
                 modal.add_item(comp)
-                comp = discord.ui.InputText(label="생년월일", placeholder="당신의 생일을 YYMMDD 형식으로 입력해주세요.", min_length=6, max_length=6, value="040309")
+                comp = discord.ui.InputText(label="생년월일", placeholder="당신의 생일을 YYMMDD 형식으로 입력해주세요.", min_length=6, max_length=6)
                 modal.add_item(comp)
                 comp = discord.ui.InputText(label="비밀번호", placeholder="쉿, 우리들만의 비밀이에요.", min_length=4, max_length=4)
                 modal.add_item(comp)
 
                 async def asdf(interaction):
-                    print(interaction.response)
-                    await interaction.response.send_modal(modal)
+                    global userData
+                    #결과값 임시 저장
+                    res = interaction.data["components"]
+
+                    #DB에 등록
+                    try:
+                        #선택한 학교 DB에 저장
+                        cursor.execute(
+                            "INSERT INTO hcsData(id, name, birth, region, school, level, password) VALUES(?, ?, ?, ?, ?, ?, ?)",
+                            (author, res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"])
+                        )
+
+                    except sqlite3.IntegrityError: #이미 등록한 사용자의 경우
+                        #정보 업데이트
+                        cursor.execute(
+                            "UPDATE hcsData SET name=?, birth=?, region=?, school=?, level=?, password=? WHERE id=?",
+                            (res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"], author)
+                        )
+
+                    #DB 적용
+                    con.commit()
+                    
+                    await interaction.response.send_message(content="설정 완료!", view=None, delete_after=5.0)
                 modal.callback = asdf
 
                 await interaction.response.send_modal(modal)
@@ -420,12 +444,24 @@ async def doHcs(
 
 
 #/한강
-@bot.slash_command(name="한강", guild_ids = [803249696638238750], description="자살 하면 그만이야~")
+@bot.slash_command(name="한강", description="자살 하면 그만이야~")
 async def getHangang(ctx):
     """한강 api 딜레이 심해서 디코봇이 응답안함으로 인식함. 그래서 일단 메시지 보내고 수정하는 방식 채용"""
 
     respondMsg = await ctx.respond(f"한강 수온을 불러오는중...")
     await respondMsg.edit_original_message(content = f"현재 한강 수온 : {hangang.getTemp()}°C")
+
+
+#==============================
+
+
+#짤
+@bot.slash_command(name="짤", guild_ids = [803249696638238750], description="짤을 생성합니다.")
+async def img(
+        ctx,
+        imageName: discord.Option(str, name="이름", description="짤 이름", default="몰루")
+    ):
+    await ctx.respond(file=discord.File(image.makeUrl(imageName)))
 
 
 #/dev
