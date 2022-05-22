@@ -86,7 +86,7 @@ async def help(ctx):
     help_embed.add_field(name="/한강", value="한강 수온을 불러옵니다.", inline=False)
     help_embed.add_field(name="/급식", value="오늘 급식을 불러옵니다.", inline=False)
     help_embed.add_field(name="/자가진단_등록", value="자동으로 자가진단을 해줍니다.", inline=False)
-    help_embed.add_field(name="/짤", value="짤을 불러옵니다.", inline=False)
+    help_embed.add_field(name="/짤", value="짤을 불러옵니다.\n[짤 목록](https://image.skybro2004.com)", inline=False)
     help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Assistant-Bot)", inline=False)
     await ctx.respond(embed=help_embed)
 
@@ -456,10 +456,10 @@ async def getHangang(ctx):
 
 
 #짤
-@bot.slash_command(name="짤", guild_ids = [803249696638238750], description="짤을 생성합니다.")
+@bot.slash_command(name="짤", description="짤을 생성합니다.")
 async def img(
         ctx,
-        imageName: discord.Option(str, name="이름", description="짤 이름", default="몰루")
+        imageName: discord.Option(str, name="이름", description="짤 이름")
     ):
     await ctx.respond(file=discord.File(image.makeUrl(imageName)))
 
