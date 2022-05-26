@@ -51,10 +51,10 @@ bot = discord.Bot(intents=intents)
 @bot.event
 async def on_ready():
     activity = discord.Activity(type=discord.ActivityType.listening, name="나잠수 - 사이버가수 아담")
-    await bot.change_presence(status=discord.Status.streaming, activity=activity)
+    await bot.change_presence(activity=activity)
     print(f"login as {bot.user}")
     print("="*50)
-    await bot.register_commands(commands=None, guild_id=803249696638238750, force=True)
+    await bot.register_commands(commands=None, guild_id=None)
 
 
 #==================================================
