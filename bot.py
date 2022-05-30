@@ -39,7 +39,8 @@ except FileNotFoundError:
         json.dump(keys, jsonKeys)
 
 #봇에게 권한 부여
-intents = discord.Intents.all()
+# intents = discord.Intents.all()
+intents = discord.Intents(members=True, messages=True, guild_messages=True, dm_messages=True, message_content=True)
 #시작
 bot = discord.Bot(intents=intents)
 
@@ -395,15 +396,15 @@ async def doHcs(
                     try:
                         #선택한 학교 DB에 저장
                         cursor.execute(
-                            "INSERT INTO hcsData(id, name, birth, region, school, level, password) VALUES(?, ?, ?, ?, ?, ?, ?)",
-                            (author, res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"])
+                            "INSERT INTO hcsData(id, name, birth, region, school, level, password, testDate) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                            (author, res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"], "없음")
                         )
 
                     except sqlite3.IntegrityError: #이미 등록한 사용자의 경우
                         #정보 업데이트
                         cursor.execute(
-                            "UPDATE hcsData SET name=?, birth=?, region=?, school=?, level=?, password=? WHERE id=?",
-                            (res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"], author)
+                            "UPDATE hcsData SET name=?, birth=?, region=?, school=?, level=?, password=?, testDate=? WHERE id=?",
+                            (res[0]["components"][0]["value"], res[1]["components"][0]["value"], userData["region"], userData["school"], userData["level"], res[2]["components"][0]["value"], "없음", author)
                         )
 
                     #DB 적용
