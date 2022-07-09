@@ -55,7 +55,8 @@ async def on_ready():
     await bot.change_presence(activity=activity)
     print(f"login as {bot.user}")
     print("="*50)
-    await bot.register_commands(commands=None, guild_id=None)
+    # await bot.register_command(discord.ApplicationCommand(hidden), guild_ids=[958731255170600992, 877169043927355423], force=True)
+    await bot.register_commands(commands=None, guild_id=None, force=True)
 
 
 #==================================================
@@ -88,7 +89,7 @@ async def help(ctx):
     help_embed.add_field(name="/급식", value="오늘 급식을 불러옵니다.", inline=False)
     help_embed.add_field(name="/자가진단_등록", value="자동으로 자가진단을 해줍니다.", inline=False)
     help_embed.add_field(name="/짤", value="짤을 불러옵니다.\n[짤 목록](https://image.skybro2004.com)", inline=False)
-    help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Assistant-Bot)", inline=False)
+    help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Cyberstar-Adam)", inline=False)
     await ctx.respond(embed=help_embed)
 
 
@@ -453,8 +454,6 @@ async def getHangang(ctx):
     await respondMsg.edit_original_message(content = f"현재 한강 수온 : {hangang.getTemp()}°C")
 
 
-#==============================
-
 
 #짤
 @bot.slash_command(name="짤", description="짤을 생성합니다.")
@@ -465,46 +464,51 @@ async def img(
     await ctx.respond(file=discord.File(image.makeUrl(imageName)))
 
 
+
+#==============================
+
+
+
 #/dev
-@bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
-@discord.has_role(946797378780950608)
-async def dev1(ctx):
-    aasdff = discord.ui.Button(label="asdf")
+# @bot.slash_command(name="dev1", guild_ids = [803249696638238750], description="dev1")
+# @discord.has_role(946797378780950608)
+# async def dev1(ctx):
+#     aasdff = discord.ui.Button(label="asdf")
 
 
-@bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
-@discord.has_role(946797378780950608)
-async def dev2(ctx):
-    voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
-    view = discord.ui.View()
-    view.add_item(voteList)
-    await ctx.respond("투표", view=view)
+# @bot.slash_command(name="dev2", guild_ids = [803249696638238750], description="dev2")
+# @discord.has_role(946797378780950608)
+# async def dev2(ctx):
+#     voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+#     view = discord.ui.View()
+#     view.add_item(voteList)
+#     await ctx.respond("투표", view=view)
 
-@bot.slash_command(name="dev3", guild_ids = [803249696638238750], description="dev3")
-@discord.has_role(946797378780950608)
-async def dev3(ctx):
-    #voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
-    inputText = discord.ui.InputText(label="label", placeholder="placeholder", value="asdf")
-    view = discord.ui.View()
-    view.add_item(inputText)
-    await ctx.respond("투표", view=view)
+# @bot.slash_command(name="dev3", guild_ids = [803249696638238750], description="dev3")
+# @discord.has_role(946797378780950608)
+# async def dev3(ctx):
+#     #voteList = discord.ui.Select(placeholder="기호6번허경영", options=[discord.SelectOption(label="기호1번찢재명", value=1), discord.SelectOption(label="기호2번퐁퐁이형", value=2)])
+#     inputText = discord.ui.InputText(label="label", placeholder="placeholder", value="asdf")
+#     view = discord.ui.View()
+#     view.add_item(inputText)
+#     await ctx.respond("투표", view=view)
 
 
 #/owner
-@bot.slash_command(name="owner", guild_ids = [803249696638238750], description="owner")
-@discord.is_owner(803249696638238750)
-async def hidden(ctx):
-    print(bot.guilds)
-    await ctx.respond(f"owner")
+# @bot.slash_command(name="owner", guild_ids = [803249696638238750], description="owner")
+# @discord.is_owner(803249696638238750)
+# async def hidden(ctx):
+#     print(bot.guilds)
+#     await ctx.respond(f"owner")
 
 
 #/buttonTest
-@bot.slash_command(name="button_test", guild_ids = [803249696638238750], description="test")
-async def hidden(ctx):
-    button = discord.ui.Button(label="<:white_check_mark:> asfd", style=discord.ButtonStyle.green, emoji="✔")
-    components = discord.ui.View()
-    components.add_item(button)
-    await ctx.respond("awsdf", view=components)
+# @bot.slash_command(name="button_test", guild_ids = [877169043927355423, 994844787301679164], description="test")
+# async def hidden(ctx):
+#     button = discord.ui.Button(label="<:white_check_mark:> asfd", style=discord.ButtonStyle.green, emoji="✔")
+#     components = discord.ui.View()
+#     components.add_item(button)
+#     await ctx.respond("awsdf", view=components)
 
 
 
