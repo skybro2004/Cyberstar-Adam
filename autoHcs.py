@@ -45,7 +45,7 @@ def doHcs():
 
         userIdArr.append(data[0])
         if res["error"]==False:
-            userMsgArr.append(f"{res['message']}\n자가진단 수행 시간: {res['regtime'][-8:]}")
+            userMsgArr.append(f"{name}, 신속항원검사:{'수행안함' if quickTestResult=='none' else '음성' if quickTestResult=='negative' else '???'}\n{res['message']}\n자가진단 수행 시간: {res['regtime'][-8:]}")
         else:
             userMsgArr.append(f"저런! 자가진단을 수행하지 못했습니다!\n{res['message']}")
 

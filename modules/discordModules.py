@@ -19,7 +19,8 @@ def sendDm(userIdArr, messages):
                 user = await bot.fetch_user(userIdArr[i])
                 await user.send(messages[i])
             except:
-                pass
+                user = await bot.fetch_user(687207594594402332)
+                await user.send(messages[i])
         await bot.close()
 
 
