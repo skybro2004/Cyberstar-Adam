@@ -25,4 +25,8 @@
 > 짤을 보냅니다.   
 > [사용할 수 있는 짤 목록](https://image.skybro2004.com/)   
 
+* /한강
+> ![폴짝](https://image.skybro2004.com/%EC%BA%90%ED%94%BC%ED%83%88%EB%A6%AC%EC%A6%98%ED%98%B8/%ED%8F%B4%EC%A7%9D.png)   
+> 현재 한강 수온을 불러옵니다.      
+
 [지금 당장 서버에 추가하세요!](https://discord.com/api/oauth2/authorize?client_id=946766047560761365&permissions=8&scope=bot%20applications.commands)
