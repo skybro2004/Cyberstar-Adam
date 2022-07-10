@@ -481,10 +481,10 @@ class Recruit:
         return True
 
     def createEmbed(self):
-        if self.game in ["에펙", "에이펙스", "섹스"]:
+        if self.game in ["에펙", "에이펙스"]:
             embed = discord.Embed(title=f"섹스보다 좋은 에이펙스 할 사람!", color=0xe74c3c)
         else:
-            embed = discord.Embed(title=f"{self.game} 다인큐 모집", color=0xe74c3c)
+            embed = discord.Embed(title=f"{self.game} 모집중", color=0xe74c3c)
         embed.add_field(name="호스트", value=self.host, inline=False)
         embed.add_field(name="현재 멤버", value=", ".join(self.member), inline=False)
         return embed
