@@ -21,9 +21,6 @@ from modules import image
 con = sqlite3.connect(f"{path}/data/database.db")
 cursor = con.cursor()
 
-#투표 데이터
-voteDatas = {}
-
 #디스코드 봇 토큰 불러오기
 keys = {}
 try:
@@ -466,6 +463,69 @@ async def img(
 
 
 #==============================
+
+
+
+recruitPool = {}
+
+class Recruit:
+    def __init__(self, host: str, game: str):
+        self.host = host
+        self.game = game
+        self.member = [host]
+
+    def join(self, user: str):
+        if user in self.member:
+            return False
+        self.member.append(user)
+        return True
+
+    def createEmbed(self):
+        if self.game in ["에펙", "에이펙스", "섹스"]:
+            embed = discord.Embed(title=f"섹스보다 좋은 에이펙스 할 사람!", color=0xe74c3c)
+        else:
+            embed = discord.Embed(title=f"{self.game} 다인큐 모집", color=0xe74c3c)
+        embed.add_field(name="호스트", value=self.host, inline=False)
+        embed.add_field(name="현재 멤버", value=", ".join(self.member), inline=False)
+        return embed
+
+
+@bot.slash_command(name="다인큐모집", description="중망호 너만오면 ㄱ")
+async def recruit(
+        ctx,
+        game: discord.Option(str, name="게임")
+    ):
+
+    await ctx.respond("다인큐 모집중")
+
+    view = discord.ui.View()
+
+    async def onJoinButtonPress(interaction):
+        msgId = interaction.message.id
+        res = recruitPool[msgId].join(f"{interaction.user.name}#{interaction.user.discriminator}")
+        if not(res):
+            await ctx.respond("이미 참가했습니다!", ephemeral=True)
+        else:
+            await interaction.message.edit(embed=recruitPool[msgId].createEmbed())
+
+    joinButton = discord.ui.Button(label="참가!", style=discord.ButtonStyle.green)
+    joinButton.callback = onJoinButtonPress
+
+    view.add_item(joinButton)
+
+    tempRecruit = Recruit(f"{ctx.author.name}#{ctx.author.discriminator}", game)
+
+    embed = discord.Embed(title=f"{game} 다인큐 모집", color=0xe74c3c)
+    embed.add_field(name="호스트", value=f"{ctx.author.name}#{ctx.author.discriminator}", inline=False)
+    embed.add_field(name="현재 멤버", value="없음", inline=False)
+
+    recruitMsg = await ctx.send(embed=tempRecruit.createEmbed(), view=view)
+
+    recruitId = recruitMsg.id
+
+    recruitPool[recruitId] = tempRecruit
+
+
 
 
 
