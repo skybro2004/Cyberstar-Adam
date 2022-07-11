@@ -13,4 +13,5 @@ def makeUrl(imageName):
     try:
         return path + hashMap[imageName]
     except KeyError:
-        return path + "404/몰루.gif"
+        raise FileNotFoundError
+        # return path + "404/몰루.gif"

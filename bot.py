@@ -458,7 +458,13 @@ async def img(
         ctx,
         imageName: discord.Option(str, name="이름", description="짤 이름")
     ):
-    await ctx.respond(file=discord.File(image.makeUrl(imageName)))
+    try:
+        await ctx.respond(file=discord.File(image.makeUrl(imageName)))
+    except FileNotFoundError:
+        view = discord.ui.View()
+        urlButton = discord.ui.Button(label="사용할 수 있는 짤 목록", url="https://image.skybro2004.com/")
+        view.add_item(urlButton)
+        await ctx.respond(content="존재하지 않는 짤 이름입니다.", view=view, ephemeral=True)
 
 
 
