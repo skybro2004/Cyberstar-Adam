@@ -61,12 +61,15 @@ async def on_ready():
 
 #/ping
 @bot.slash_command(guild_ids = [803249696638238750], description="Check bot's response latency")
+@discord.is_owner()
 async def ping(ctx):
     await ctx.respond(f'pong! {round(round(bot.latency, 4)*1000)}ms')
 
 
+
 #/status
 @bot.slash_command(description="현재 봇 상태 출력")
+@discord.is_owner()
 async def status(ctx):
     status_embed = discord.Embed(title="status", description=f"log in as {bot.user}", color=0xe74c3c)
     status_embed.add_field(name="ping", value=f'{round(round(bot.latency, 4)*1000)}ms')
@@ -74,6 +77,7 @@ async def status(ctx):
     status_embed.add_field(name="last update", value=lastUpdateTime)
     status_embed.set_footer(text=f"hosting by Raspberry Pi 4(8Gb)")
     await ctx.respond(embed=status_embed)
+
 
 
 #/help
@@ -88,6 +92,7 @@ async def help(ctx):
     help_embed.add_field(name="/짤", value="짤을 불러옵니다.\n[짤 목록](https://image.skybro2004.com)", inline=False)
     help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Cyberstar-Adam)", inline=False)
     await ctx.respond(embed=help_embed)
+
 
 
 #/급식
@@ -249,10 +254,12 @@ async def meals(
         await botMsg.edit_original_message(content=f"\"{schlName}\" 검색결과", view=selectSchl())
 
 
+
 #/시간표
 @bot.slash_command(name="시간표", guild_ids = [803249696638238750], description="시간표 불러옵니다")
 async def schedular(ctx):
     pass
+
 
 
 #/자가진단_등록
@@ -495,7 +502,6 @@ class Recruit:
         embed.add_field(name="현재 멤버", value=", ".join(self.member), inline=False)
         return embed
 
-
 @bot.slash_command(name="다인큐모집", description="중망호 너만오면 ㄱ")
 async def recruit(
         ctx,
@@ -530,8 +536,6 @@ async def recruit(
     recruitId = recruitMsg.id
 
     recruitPool[recruitId] = tempRecruit
-
-
 
 
 
