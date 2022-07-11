@@ -85,11 +85,11 @@ async def status(ctx):
 @bot.slash_command(name="도움말" , description="도움말을 불러옵니다.")
 async def help(ctx):
     help_embed = discord.Embed(title='도움말', color=0xe74c3c)
-    help_embed.add_field(name="/status", value="현재 아담의 상태를 불러옵니다.", inline=False)
     help_embed.add_field(name="/한강", value="한강 수온을 불러옵니다.", inline=False)
     help_embed.add_field(name="/급식", value="오늘 급식을 불러옵니다.", inline=False)
     help_embed.add_field(name="/자가진단_등록", value="자동으로 자가진단을 해줍니다.", inline=False)
     help_embed.add_field(name="/짤", value="짤을 불러옵니다.\n[짤 목록](https://image.skybro2004.com)", inline=False)
+    help_embed.add_field(name="/다인큐모집", value="함께 섹스할 친구를 모집합니다.", inline=False)
     help_embed.add_field(name="상세정보", value="[제작자 깃허브](https://github.com/skybro2004/Cyberstar-Adam)", inline=False)
     await ctx.respond(embed=help_embed)
 
